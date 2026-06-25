@@ -164,6 +164,14 @@
     .jmf-price.winner .pris{color:var(--green);font-size:15px}
     .jmf-saving{font-size:12px;color:var(--green);font-weight:600;margin-left:8px}
 
+    /* ── PRISFÖRÄNDRINGAR ────────────────────────────────────── */
+    .pf-row-down{background:#dcfce7!important}.pf-row-down:hover{background:#bbf7d0!important}
+    .pf-row-up{background:#fee2e2!important}.pf-row-up:hover{background:#fecaca!important}
+    .pf-row-new{background:#fffbeb!important}.pf-row-new:hover{background:#fef3c7!important}
+    .pf-badge-down{display:inline-block;padding:2px 7px;border-radius:10px;font-weight:700;font-size:12px;background:var(--green-bg);color:var(--green)}
+    .pf-badge-up{display:inline-block;padding:2px 7px;border-radius:10px;font-weight:700;font-size:12px;background:var(--red-bg);color:var(--red)}
+    .pf-badge-new{display:inline-block;padding:2px 7px;border-radius:10px;font-weight:700;font-size:12px;background:#fef9c3;color:#92400e}
+
     /* ── EMPTY ───────────────────────────────────────────────── */
     .empty-state{padding:48px 16px;text-align:center;color:var(--gray-400)}
     .empty-state div{font-size:36px;margin-bottom:8px}
@@ -212,6 +220,12 @@
     <button class="tab-btn" onclick="switchTab('jmf')" id="tab-jmf">
       🏆 Tretti vinner <span class="tab-count" id="cnt-jmf">0</span>
     </button>
+    <button class="tab-btn" onclick="switchTab('pf')" id="tab-pf">
+      📈 Prisförändringar <span class="tab-count" id="cnt-pf">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('kd')" id="tab-kd">
+      🔎 Konkurrentdata <span class="tab-count" id="cnt-kd">0</span>
+    </button>
   </div>
 
   <div class="filter-bar" id="filter-bar">
@@ -244,6 +258,44 @@
 
   <div id="jmf-section" style="display:none">
     <div class="jmf-grid" id="jmf-grid"></div>
+  </div>
+
+  <div id="pf-section" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-scroll">
+        <table id="pf-table">
+          <thead id="pf-head"></thead>
+          <tbody id="pf-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="kd-section" style="display:none">
+    <div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="kd-search" placeholder="🔍 Sök SKU, varumärke, konkurrent…" oninput="renderKonkurrentdata()"
+        style="padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;width:260px">
+      <select id="kd-konkurrent" onchange="renderKonkurrentdata()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+        <option value="">Alla konkurrenter</option>
+        <option>Elgiganten</option><option>Power</option><option>Netonnet</option>
+      </select>
+      <select id="kd-kategori" onchange="renderKonkurrentdata()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+        <option value="">Alla kategorier</option>
+      </select>
+      <select id="kd-källa" onchange="renderKonkurrentdata()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+        <option value="">Alla år</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <div class="table-scroll">
+        <table id="kd-table" style="min-width:1200px">
+          <thead id="kd-head"></thead>
+          <tbody id="kd-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div class="charts-section" id="charts-section">
@@ -289,12 +341,15 @@ const CSV_URLS = {
   kampanjer:      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfy9o1OyRThf_-5lOLIdq4jGqglCYa2WNNs4b92ooJRIXK41GYQhSGIqD8qeoWVcy_Iol3zSHlXRXN/pub?gid=59725059&single=true&output=csv",
   alla:           "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfy9o1OyRThf_-5lOLIdq4jGqglCYa2WNNs4b92ooJRIXK41GYQhSGIqD8qeoWVcy_Iol3zSHlXRXN/pub?gid=979169503&single=true&output=csv",
   sammanfattning: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfy9o1OyRThf_-5lOLIdq4jGqglCYa2WNNs4b92ooJRIXK41GYQhSGIqD8qeoWVcy_Iol3zSHlXRXN/pub?gid=1788301123&single=true&output=csv",
+  prishistorik:      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfy9o1OyRThf_-5lOLIdq4jGqglCYa2WNNs4b92ooJRIXK41GYQhSGIqD8qeoWVcy_Iol3zSHlXRXN/pub?gid=149360670&single=true&output=csv",
+  prisforandringar:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfy9o1OyRThf_-5lOLIdq4jGqglCYa2WNNs4b92ooJRIXK41GYQhSGIqD8qeoWVcy_Iol3zSHlXRXN/pub?gid=1535641353&single=true&output=csv",
+  konkurrentdata:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfy9o1OyRThf_-5lOLIdq4jGqglCYa2WNNs4b92ooJRIXK41GYQhSGIqD8qeoWVcy_Iol3zSHlXRXN/pub?gid=1213616983&single=true&output=csv",
 };
 const PAGE_SIZE = 50;
 
 // ─── STATE ────────────────────────────────────────────────────────────────
 let state = {
-  kampanjer:[], alla:[], sammanfattning:[], jmf:[],
+  kampanjer:[], alla:[], sammanfattning:[], jmf:[], prishistorik:[], prisforandringar:[], konkurrentdata:[],
   activeTab:"kampanjer", filtered:[],
   sort:{col:null,dir:"asc"}, page:1, charts:{}, openRow:null,
 };
@@ -327,6 +382,21 @@ const VISIBLE_COLS = [
 ];
 
 // ─── CSV PARSING ──────────────────────────────────────────────────────────
+function parsePrishistorikCSV(text) {
+  const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+  return result.data || [];
+}
+
+function parsePrisforandringarCSV(text) {
+  // Samma layout som produktflikarna: rad 1 = metadata, rad 2 = tom, rad 3 = rubriker, rad 4+ = data
+  const rows = Papa.parse(text, { skipEmptyLines: false }).data;
+  if (rows.length < 3) return [];
+  const headers = rows[2];
+  return rows.slice(3)
+    .filter(r => r.some(c => (c||"").trim() !== ""))
+    .map(r => { const o = {}; headers.forEach((h, i) => { o[h] = (r[i] || "").trim(); }); return o; });
+}
+
 function parseProductCSV(text) {
   const rows = Papa.parse(text, {skipEmptyLines:false}).data;
   if (rows.length < 3) return {rows:[],updatedAt:""};
@@ -364,11 +434,47 @@ async function loadData() {
     state.sammanfattning = parseSumCSV(tS);
     state.jmf = computeJMF(state.alla);
 
+    // Prishistorik — optional, sparklines visas inte om hämtning misslyckas
+    if (CSV_URLS.prishistorik !== "PLACEHOLDER_URL") {
+      try {
+        const tH = await fetchCSV(CSV_URLS.prishistorik);
+        state.prishistorik = parsePrishistorikCSV(tH);
+      } catch(e) {
+        state.prishistorik = [];
+      }
+    }
+
+    // Prisförändringar — optional
+    if (CSV_URLS.prisforandringar !== "PLACEHOLDER_URL_PF") {
+      try {
+        const tPF = await fetchCSV(CSV_URLS.prisforandringar);
+        state.prisforandringar = parsePrisforandringarCSV(tPF);
+      } catch(e) {
+        state.prisforandringar = [];
+      }
+    }
+
+    // Konkurrentdata — optional
+    if (CSV_URLS.konkurrentdata !== "PLACEHOLDER_URL_KD") {
+      try {
+        const tKD = await fetchCSV(CSV_URLS.konkurrentdata);
+        state.konkurrentdata = Papa.parse(tKD, { header: true, skipEmptyLines: true }).data || [];
+        // Populate kategori filter
+        const kdKats = [...new Set(state.konkurrentdata.map(r => r["kategori"]).filter(Boolean))].sort();
+        document.getElementById("kd-kategori").innerHTML =
+          `<option value="">Alla kategorier</option>` + kdKats.map(k=>`<option>${k}</option>`).join("");
+      } catch(e) {
+        state.konkurrentdata = [];
+      }
+    }
+
     const ts = (pK.updatedAt||"").replace("Uppdaterad: ","");
     document.getElementById("last-updated").textContent = ts ? "Uppdaterad: "+ts.substring(0,16).replace("T"," ") : "";
     document.getElementById("cnt-kampanjer").textContent = state.kampanjer.length;
     document.getElementById("cnt-alla").textContent      = state.alla.length;
     document.getElementById("cnt-jmf").textContent       = state.jmf.length;
+    document.getElementById("cnt-pf").textContent        = state.prisforandringar.length;
+    document.getElementById("cnt-kd").textContent        = state.konkurrentdata.length;
 
     populateDropdowns();
     renderKPIs();
@@ -384,6 +490,14 @@ async function loadData() {
       <button onclick="loadData()" style="margin-top:8px;padding:8px 16px;background:#003087;color:#fff;border:none;border-radius:6px;cursor:pointer">Försök igen</button>`;
   }
   document.getElementById("btn-refresh").disabled = false;
+}
+
+// ─── PRISHISTORIK ─────────────────────────────────────────────────────────
+function getPriceHistory(url) {
+  if (!url || !state.prishistorik.length) return [];
+  return state.prishistorik
+    .filter(r => r["URL"] === url)
+    .sort((a, b) => (a["Datum"] < b["Datum"] ? -1 : a["Datum"] > b["Datum"] ? 1 : 0));
 }
 
 // ─── PRISJÄMFÖRELSE ───────────────────────────────────────────────────────
@@ -444,12 +558,20 @@ function switchTab(tab, force) {
   state.activeTab=tab; state.page=1; state.openRow=null;
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+tab).classList.add("active");
-  const isJMF=tab==="jmf";
-  document.getElementById("filter-bar").style.display    = isJMF?"none":"flex";
-  document.getElementById("table-wrapper").style.display = isJMF?"none":"block";
+  const isJMF    = tab==="jmf";
+  const isPF     = tab==="pf";
+  const isKD     = tab==="kd";
+  const isNormal = !isJMF && !isPF && !isKD;
+  document.getElementById("filter-bar").style.display    = isNormal?"flex":"none";
+  document.getElementById("table-wrapper").style.display = isNormal?"block":"none";
   document.getElementById("jmf-section").style.display   = isJMF?"block":"none";
-  document.getElementById("charts-section").style.display= isJMF?"none":"grid";
-  isJMF ? renderJMF() : applyFilters();
+  document.getElementById("pf-section").style.display    = isPF?"block":"none";
+  document.getElementById("kd-section").style.display    = isKD?"block":"none";
+  document.getElementById("charts-section").style.display= isNormal?"grid":"none";
+  if (isJMF)      renderJMF();
+  else if (isPF)  renderPrisforandringar();
+  else if (isKD)  renderKonkurrentdata();
+  else            applyFilters();
 }
 
 // ─── FILTERS ──────────────────────────────────────────────────────────────
@@ -566,11 +688,55 @@ function detailRow(p,colSpan) {
     {l:"Framhävd",     v:p[COL.FEATURED]},
   ].filter(f=>f.v);
   const urlHtml=p[COL.URL]?`<div><div class="dp-label">Länk</div><div class="dp-val dp-url"><a href="${p[COL.URL]}" target="_blank">Öppna produktsida ↗</a></div></div>`:"";
+
+  // Sparkline — visas bara om prishistorik finns för produkten
+  const url = p[COL.URL] || "";
+  const hist = getPriceHistory(url);
+  let sparkHtml = "";
+  if (hist.length > 1) {
+    const canvasId = "hist_" + btoa(encodeURIComponent(url)).replace(/[^a-z0-9]/gi,"").slice(0,12);
+    sparkHtml = `<div style="padding:10px 20px 16px;background:var(--gray-100);border-top:1px solid var(--gray-200)">
+      <div style="font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Prisutveckling</div>
+      <div style="height:100px;position:relative"><canvas id="${canvasId}"></canvas></div>
+    </div>`;
+    setTimeout(() => {
+      const el = document.getElementById(canvasId);
+      if (!el) return;
+      new Chart(el, {
+        type: "line",
+        data: {
+          labels: hist.map(r => r["Datum"]),
+          datasets: [{
+            data: hist.map(r => parseFloat(r["Kampanjpris (kr)"]) || null),
+            borderColor: "#1a56db",
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.3,
+            spanGaps: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: ctx => ctx.parsed.y != null ? ctx.parsed.y.toLocaleString("sv-SE") + " kr" : ""
+          }}},
+          scales: {
+            x: { ticks: { font: { size: 10 }, maxTicksLimit: 6 }, grid: { display: false } },
+            y: { ticks: { font: { size: 10 }, callback: v => v.toLocaleString("sv-SE") + " kr" } },
+          }
+        }
+      });
+    }, 50);
+  }
+
   return `<tr class="detail-row"><td colspan="${colSpan}">
     <div class="detail-panel">
       ${fields.map(f=>`<div><div class="dp-label">${f.l}</div><div class="dp-val">${f.v}</div></div>`).join("")}
       ${urlHtml}
     </div>
+    ${sparkHtml}
   </td></tr>`;
 }
 
@@ -637,6 +803,159 @@ function renderJMF(){
   }).join("");
 }
 
+// ─── PRISFÖRÄNDRINGAR ─────────────────────────────────────────────────────
+function renderPrisforandringar() {
+  const thead = document.getElementById("pf-head");
+  const tbody = document.getElementById("pf-body");
+
+  const PF_COLS = [
+    {key:"Butik",                    label:"Butik",        w:"90px"},
+    {key:"Namn",                     label:"Produkt",      w:"260px"},
+    {key:"Varumärke",                label:"Märke",        w:"90px"},
+    {key:"Kategori",                 label:"Kategori",     w:"110px"},
+    {key:"Kampanjpris (kr)",         label:"Pris nu",      w:"90px", num:true},
+    {key:"Förra kampanjpriset (kr)", label:"Förra priset", w:"95px", num:true},
+    {key:"Prisförändring (kr)",      label:"Ändring (kr)", w:"90px", num:true},
+    {key:"Prisförändring (%)",       label:"Ändring (%)",  w:"85px", num:true},
+  ];
+
+  thead.innerHTML = `<tr style="background:var(--blue-dark);color:#fff">${PF_COLS.map(c =>
+    `<th style="width:${c.w};padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap">${c.label}</th>`).join("")}</tr>`;
+
+  if (!state.prisforandringar.length) {
+    tbody.innerHTML = `<tr><td colspan="${PF_COLS.length}">
+      <div class="empty-state"><div>📈</div>
+      ${CSV_URLS.prisforandringar === "PLACEHOLDER_URL_PF"
+        ? "Ersätt PLACEHOLDER_URL_PF i CSV_URLS med den publicerade Google Sheets-URL:en."
+        : "Inga prisförändringar hittades."}</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = state.prisforandringar.map(p => {
+    const butik      = (p["Butik"] || "").toLowerCase();
+    const forr       = p["Förra kampanjpriset (kr)"];
+    const andringKr  = parseFloat(p["Prisförändring (kr)"]) || 0;
+    const andringPct = parseFloat(p["Prisförändring (%)"]) || 0;
+    const prisNu     = parseFloat(p["Kampanjpris (kr)"]) || 0;
+
+    const isNew  = forr === "Ny";
+    const isDown = !isNew && andringKr < 0;
+
+    const rowCls = isNew ? "pf-row-new" : isDown ? "pf-row-down" : "pf-row-up";
+
+    const badgeHtml = isNew
+      ? `<span class="pf-badge-new">NY</span>`
+      : isDown
+        ? `<span class="pf-badge-down">${andringPct}%</span>`
+        : `<span class="pf-badge-up">+${andringPct}%</span>`;
+
+    const forrHtml = isNew
+      ? `<span class="pf-badge-new">Ny</span>`
+      : (parseFloat(forr)||0).toLocaleString("sv-SE") + " kr";
+
+    const andringKrHtml = isNew ? "–"
+      : isDown
+        ? `<span style="color:var(--green);font-weight:700">${andringKr.toLocaleString("sv-SE")} kr</span>`
+        : `<span style="color:var(--red);font-weight:700">+${andringKr.toLocaleString("sv-SE")} kr</span>`;
+
+    return `<tr class="${rowCls}">
+      <td style="padding:9px 12px"><span class="badge badge-${butik}">${p["Butik"]||"–"}</span></td>
+      <td style="padding:9px 12px"><strong>${p["Namn"]||"–"}</strong></td>
+      <td style="padding:9px 12px">${p["Varumärke"]||"–"}</td>
+      <td style="padding:9px 12px">${p["Kategori"]||"–"}</td>
+      <td style="padding:9px 12px;tex      <td style="padding:9px 12px;text-align:right">${prisNu ? prisNu.toLocaleString("sv-SE")+" kr" : "–"}</td>
+      <td style="padding:9px 12px;text-align:right">${forrHtml}</td>
+      <td style="padding:9px 12px;text-align:right">${andringKrHtml}</td>
+      <td style="padding:9px 12px;text-align:right">${badgeHtml}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ─── KONKURRENTDATA ───────────────────────────────────────────────────────
+function renderKonkurrentdata() {
+  const thead = document.getElementById("kd-head");
+  const tbody = document.getElementById("kd-body");
+
+  const KD_COLS = [
+    {key:"kampanj_start",   label:"Kampanjstart",  w:"100px"},
+    {key:"kampanj_end",     label:"Kampanjslut",   w:"100px"},
+    {key:"vecka",           label:"Vecka",         w:"75px"},
+    {key:"konkurrent",      label:"Konkurrent",    w:"100px"},
+    {key:"kategori",        label:"Kategori",      w:"90px"},
+    {key:"produktgrupp",    label:"Produktgrupp",  w:"130px"},
+    {key:"varumärke",       label:"Märke",         w:"80px"},
+    {key:"sku",             label:"SKU",           w:"140px"},
+    {key:"kampanjpris",     label:"Kampanjpris",   w:"95px",  num:true},
+    {key:"ordinarie_pris",  label:"Ord.pris",      w:"85px",  num:true},
+    {key:"spec",            label:"Spec",          w:"160px"},
+    {key:"var_sku",         label:"Vår SKU",       w:"130px"},
+    {key:"var_kampanjpris", label:"Vårt pris",     w:"85px",  num:true},
+    {key:"prisdiff",        label:"Prisdiff (kr)", w:"90px",  num:true},
+    {key:"kommentar_b2c",   label:"Kommentar",     w:"200px"},
+    {key:"källa",           label:"År",            w:"50px"},
+  ];
+
+  thead.innerHTML = `<tr style="background:var(--blue-dark);color:#fff">` +
+    KD_COLS.map(c =>
+      `<th style="width:${c.w};min-width:${c.w};padding:10px 12px;text-align:${c.num?"right":"left"};font-weight:600;white-space:nowrap">${c.label}</th>`
+    ).join("") + `</tr>`;
+
+  if (!state.konkurrentdata.length) {
+    tbody.innerHTML = `<tr><td colspan="${KD_COLS.length}">
+      <div class="empty-state"><div>🔎</div>
+      ${CSV_URLS.konkurrentdata === "PLACEHOLDER_URL_KD"
+        ? "Publicera fliken Konkurrentdata i Google Sheets och ersätt PLACEHOLDER_URL_KD i index.html."
+        : "Ingen konkurrentdata hittades."}</div></td></tr>`;
+    return;
+  }
+
+  const search  = (document.getElementById("kd-search")?.value  || "").toLowerCase();
+  const konkFil = (document.getElementById("kd-konkurrent")?.value || "").toLowerCase();
+  const katFil  = (document.getElementById("kd-kategori")?.value  || "");
+  const källFil = (document.getElementById("kd-källa")?.value     || "");
+
+  const filtered = state.konkurrentdata.filter(r => {
+    if (konkFil && (r["konkurrent"]||"").toLowerCase().indexOf(konkFil)===-1) return false;
+    if (katFil  && r["kategori"] !== katFil) return false;
+    if (källFil && r["källa"]    !== källFil) return false;
+    if (search) {
+      const hay = [r["sku"],r["varumärke"],r["konkurrent"],r["spec"],r["kommentar_b2c"],r["var_sku"]].join(" ").toLowerCase();
+      if (hay.indexOf(search)===-1) return false;
+    }
+    return true;
+  });
+
+  tbody.innerHTML = filtered.slice(0,500).map(r => {
+    const priceDiff = parseFloat(r["prisdiff"]) || 0;
+    const diffStyle = priceDiff < 0 ? "color:var(--green);font-weight:700"
+                    : priceDiff > 0 ? "color:var(--red);font-weight:700" : "";
+    const kNm = (r["konkurrent"]||"").toLowerCase();
+    const kBadgeCls = kNm.includes("elgiganten")?"elgiganten":kNm.includes("power")?"power":"tretti";
+    const harVar = r["var_sku"]&&r["var_sku"].trim();
+
+    return `<tr style="${harVar?"background:#f0fdf4":""}">
+      <td style="padding:8px 12px;white-space:nowrap">${r["kampanj_start"]||"–"}</td>
+      <td style="padding:8px 12px;white-space:nowrap">${r["kampanj_end"]||"–"}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#64748b">${r["vecka"]||"–"}</td>
+      <td style="padding:8px 12px"><span class="badge badge-${kBadgeCls}">${r["konkurrent"]||"–"}</span></td>
+      <td style="padding:8px 12px;font-size:12px">${r["kategori"]||"–"}</td>
+      <td style="padding:8px 12px;font-size:12px">${r["produktgrupp"]||"–"}</td>
+      <td style="padding:8px 12px"><strong>${r["varumärke"]||"–"}</strong></td>
+      <td style="padding:8px 12px;font-family:monospace;font-size:12px">${r["sku"]||"–"}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:700">${r["kampanjpris"]?parseInt(r["kampanjpris"]).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;text-align:right;color:#64748b">${r["ordinarie_pris"]?parseInt(r["ordinarie_pris"]).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#475569">${r["spec"]||"–"}</td>
+      <td style="padding:8px 12px;font-family:monospace;font-size:12px;color:#166534">${r["var_sku"]||"–"}</td>
+      <td style="padding:8px 12px;text-align:right">${r["var_kampanjpris"]?parseInt(r["var_kampanjpris"]).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;text-align:right;${diffStyle}">${priceDiff?(priceDiff>0?"+":"")+parseInt(priceDiff).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#475569;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r["kommentar_b2c"]||"").replace(/"/g,"'")}">${r["kommentar_b2c"]||"–"}</td>
+      <td style="padding:8px 12px;text-align:center;font-size:11px;color:#94a3b8">${r["källa"]||"–"}</td>
+    </tr>`;
+  }).join("") + (filtered.length>500
+    ? `<tr><td colspan="${KD_COLS.length}" style="padding:12px;text-align:center;color:#64748b;font-size:13px">Visar 500 av ${filtered.length} rader — filtrera för att se fler</td></tr>`
+    : "");
+}
+
 // ─── CHARTS ───────────────────────────────────────────────────────────────
 function renderCharts(){
   Object.values(state.charts).forEach(c=>c.destroy());state.charts={};
@@ -670,6 +989,13 @@ function renderCharts(){
     type:"bar",
     data:{labels:["0–9%","10–19%","20–29%","30–39%","40–49%","50%+"],
       datasets:[{data:buckets,backgroundColor:["#94a3b8","#60a5fa","#3b82f6","#f59e0b","#f97316","#16a34a"],borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{precision:0}}},responsive:true,maintainAspectRatio:true}
+  });
+}
+</script>
+</body>
+</html>
+"#3b82f6","#f59e0b","#f97316","#16a34a"],borderRadius:4}]},
     options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{precision:0}}},responsive:true,maintainAspectRatio:true}
   });
 }
