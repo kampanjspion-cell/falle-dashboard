@@ -176,10 +176,79 @@
     .empty-state{padding:48px 16px;text-align:center;color:var(--gray-400)}
     .empty-state div{font-size:36px;margin-bottom:8px}
 
-    @media(max-width:600px){
+    /* ── MOBILE ──────────────────────────────────────────────── */
+    @media(max-width:640px){
+      /* Header */
+      header{padding:0 12px;height:48px}
+      header h1{font-size:15px}
       header h1 span{display:none}
-      .tab-btn{font-size:12px;padding:10px 4px}
+      #last-updated{display:none}
+      #btn-refresh{padding:5px 10px;font-size:12px}
+
+      /* Main padding */
+      main{padding:12px 8px}
+
+      /* KPI cards – 2 kolumner */
+      .kpi-row{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+      .kpi-card{padding:12px 14px}
       .kpi-value{font-size:22px}
+      .kpi-sub{font-size:10px}
+
+      /* Tab bar – horisontell scroll */
+      .tab-bar{
+        overflow-x:auto;overflow-y:hidden;
+        display:flex;flex-wrap:nowrap;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;border-radius:0;
+        margin:0 -8px 12px -8px;
+        border-radius:0;
+      }
+      .tab-bar::-webkit-scrollbar{display:none}
+      .tab-btn{
+        flex:0 0 auto;padding:10px 12px;
+        font-size:12px;white-space:nowrap;
+      }
+      .tab-count{display:none}
+
+      /* Filter bar – stapla vertikalt */
+      .filter-bar{flex-direction:column;align-items:stretch;gap:8px;padding:10px}
+      .filter-bar input,.filter-bar select{width:100%;min-width:unset}
+      #search-input{min-width:unset}
+      #result-info{margin-left:0;text-align:right}
+
+      /* Tabeller – horisontell scroll med swipe-ledtråd */
+      .table-wrapper{border-radius:0;margin:0 -8px}
+      .table-scroll{
+        overflow-x:auto;-webkit-overflow-scrolling:touch;
+        /* Visa en subtil gradient för att indikera att man kan scrolla */
+        background:
+          linear-gradient(to right,#fff 30%,rgba(255,255,255,0)) left/40px 100% no-repeat,
+          linear-gradient(to left,#fff 30%,rgba(255,255,255,0)) right/40px 100% no-repeat;
+        background-attachment:local;
+      }
+      table{font-size:12px}
+      thead th{padding:8px 10px;font-size:11px}
+      tbody td{padding:7px 10px}
+
+      /* Charts – stapla och förminska */
+      .charts-section{grid-template-columns:1fr;gap:10px;margin-top:12px}
+      .chart-card canvas{max-height:160px}
+      .chart-card h3{font-size:11px}
+
+      /* JMF-grid */
+      .jmf-grid{grid-template-columns:1fr}
+
+      /* Login-box */
+      .login-box{padding:28px 20px}
+
+      /* Prisförändringar-filter */
+      #pf-section > div:first-child{flex-direction:column;align-items:stretch}
+      #pf-section > div:first-child select{width:100%}
+
+      /* KD-filter */
+      #kd-section > div:first-child{flex-direction:column;align-items:stretch}
+      #kd-section > div:first-child input,
+      #kd-section > div:first-child select{width:100%}
     }
   </style>
 </head>
@@ -261,6 +330,20 @@
   </div>
 
   <div id="pf-section" style="display:none">
+    <div style="padding:10px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <select id="pf-typ" onchange="renderPrisforandringar()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+        <option value="">Alla typer</option>
+        <option value="Ny">🆕 Ny</option>
+        <option value="Sänkning">📉 Sänkning</option>
+        <option value="Höjning">📈 Höjning</option>
+        <option value="Borttagen">❌ Borttagen</option>
+      </select>
+      <select id="pf-butik" onchange="renderPrisforandringar()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px">
+        <option value="">Alla butiker</option>
+        <option>Elgiganten</option><option>Power</option><option>Tretti</option>
+      </select>
+      <span id="pf-result-info" style="font-size:12px;color:#94a3b8;margin-left:auto"></span>
+    </div>
     <div class="table-wrapper">
       <div class="table-scroll">
         <table id="pf-table">
@@ -460,7 +543,7 @@ async function loadData() {
         const tKD = await fetchCSV(CSV_URLS.konkurrentdata);
         state.konkurrentdata = Papa.parse(tKD, { header: true, skipEmptyLines: true }).data || [];
         // Populate kategori filter
-        const kdKats = [...new Set(state.konkurrentdata.map(r => r["kategori"]).filter(Boolean))].sort();
+        const kdKats = [...new Set(state.konkurrentdata.map(r => r["Kategori"]).filter(Boolean))].sort();
         document.getElementById("kd-kategori").innerHTML =
           `<option value="">Alla kategorier</option>` + kdKats.map(k=>`<option>${k}</option>`).join("");
       } catch(e) {
@@ -809,18 +892,19 @@ function renderPrisforandringar() {
   const tbody = document.getElementById("pf-body");
 
   const PF_COLS = [
-    {key:"Butik",                    label:"Butik",        w:"90px"},
-    {key:"Namn",                     label:"Produkt",      w:"260px"},
-    {key:"Varumärke",                label:"Märke",        w:"90px"},
-    {key:"Kategori",                 label:"Kategori",     w:"110px"},
-    {key:"Kampanjpris (kr)",         label:"Pris nu",      w:"90px", num:true},
-    {key:"Förra kampanjpriset (kr)", label:"Förra priset", w:"95px", num:true},
-    {key:"Prisförändring (kr)",      label:"Ändring (kr)", w:"90px", num:true},
-    {key:"Prisförändring (%)",       label:"Ändring (%)",  w:"85px", num:true},
+    {key:"Typ",                       label:"Typ",          w:"90px"},
+    {key:"Butik",                     label:"Butik",        w:"90px"},
+    {key:"Namn",                      label:"Produkt",      w:"250px"},
+    {key:"Varumärke",                 label:"Märke",        w:"90px"},
+    {key:"Kategori",                  label:"Kategori",     w:"110px"},
+    {key:"Kampanjpris (kr)",          label:"Pris nu",      w:"90px", num:true},
+    {key:"Förra kampanjpriset (kr)",  label:"Förra priset", w:"95px", num:true},
+    {key:"Prisförändring (kr)",       label:"Ändring (kr)", w:"90px", num:true},
+    {key:"Prisförändring (%)",        label:"Ändring (%)",  w:"85px", num:true},
   ];
 
   thead.innerHTML = `<tr style="background:var(--blue-dark);color:#fff">${PF_COLS.map(c =>
-    `<th style="width:${c.w};padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap">${c.label}</th>`).join("")}</tr>`;
+    `<th style="width:${c.w};padding:10px 12px;text-align:${c.num?"right":"left"};font-weight:600;white-space:nowrap">${c.label}</th>`).join("")}</tr>`;
 
   if (!state.prisforandringar.length) {
     tbody.innerHTML = `<tr><td colspan="${PF_COLS.length}">
@@ -831,42 +915,75 @@ function renderPrisforandringar() {
     return;
   }
 
-  tbody.innerHTML = state.prisforandringar.map(p => {
+  const typFil   = (document.getElementById("pf-typ")?.value   || "");
+  const butikFil = (document.getElementById("pf-butik")?.value || "").toLowerCase();
+
+  const filtered = state.prisforandringar.filter(p => {
+    const typ   = p["Typ"] || "";
+    const butik = (p["Butik"] || "").toLowerCase();
+    // Fallback: derive Typ from Förra-column if Typ column missing (old data)
+    const forrVal = p["Förra kampanjpriset (kr)"] || "";
+    const derivedTyp = typ || (forrVal === "Ny" ? "Ny"
+      : parseFloat(p["Prisförändring (kr)"]) < 0 ? "Sänkning"
+      : parseFloat(p["Prisförändring (kr)"]) > 0 ? "Höjning" : "");
+    if (typFil   && derivedTyp !== typFil)           return false;
+    if (butikFil && butik.indexOf(butikFil) === -1)  return false;
+    return true;
+  });
+
+  const pfInfo = document.getElementById("pf-result-info");
+  if (pfInfo) pfInfo.textContent = `${filtered.length} av ${state.prisforandringar.length} rader`;
+
+  tbody.innerHTML = filtered.map(p => {
     const butik      = (p["Butik"] || "").toLowerCase();
     const forr       = p["Förra kampanjpriset (kr)"];
     const andringKr  = parseFloat(p["Prisförändring (kr)"]) || 0;
     const andringPct = parseFloat(p["Prisförändring (%)"]) || 0;
     const prisNu     = parseFloat(p["Kampanjpris (kr)"]) || 0;
+    const typ        = p["Typ"] || "";
 
-    const isNew  = forr === "Ny";
-    const isDown = !isNew && andringKr < 0;
+    const isNew      = typ === "Ny"       || forr === "Ny";
+    const isRemoved  = typ === "Borttagen";
+    const isDown     = typ === "Sänkning" || (!isNew && !isRemoved && andringKr < 0);
 
-    const rowCls = isNew ? "pf-row-new" : isDown ? "pf-row-down" : "pf-row-up";
+    const rowCls = isNew ? "pf-row-new" : isRemoved ? "pf-row-up" : isDown ? "pf-row-down" : "pf-row-up";
 
-    const badgeHtml = isNew
-      ? `<span class="pf-badge-new">NY</span>`
-      : isDown
-        ? `<span class="pf-badge-down">${andringPct}%</span>`
-        : `<span class="pf-badge-up">+${andringPct}%</span>`;
+    const TYP_BADGE = {
+      "Ny":        `<span class="pf-badge-new">🆕 Ny</span>`,
+      "Sänkning":  `<span class="pf-badge-down">📉 Sänkning</span>`,
+      "Höjning":   `<span class="pf-badge-up">📈 Höjning</span>`,
+      "Borttagen": `<span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">❌ Borttagen</span>`,
+    };
+    const typBadge = TYP_BADGE[typ] || (isNew ? TYP_BADGE["Ny"] : isDown ? TYP_BADGE["Sänkning"] : TYP_BADGE["Höjning"]);
 
     const forrHtml = isNew
       ? `<span class="pf-badge-new">Ny</span>`
-      : (parseFloat(forr)||0).toLocaleString("sv-SE") + " kr";
+      : isRemoved
+        ? `${(prisNu||parseFloat(forr)||0).toLocaleString("sv-SE")} kr`
+        : (parseFloat(forr)||0).toLocaleString("sv-SE") + " kr";
 
-    const andringKrHtml = isNew ? "–"
+    const andringKrHtml = (isNew || isRemoved) ? "–"
       : isDown
         ? `<span style="color:var(--green);font-weight:700">${andringKr.toLocaleString("sv-SE")} kr</span>`
         : `<span style="color:var(--red);font-weight:700">+${andringKr.toLocaleString("sv-SE")} kr</span>`;
 
-    return `<tr class="${rowCls}">
+    const andringPctHtml = (isNew || isRemoved) ? "–"
+      : isDown
+        ? `<span style="color:var(--green);font-weight:700">${andringPct}%</span>`
+        : `<span style="color:var(--red);font-weight:700">+${andringPct}%</span>`;
+
+    const visaPris = isRemoved ? (parseFloat(forr)||0) : prisNu;
+
+    return `<tr class="${rowCls}" style="${isRemoved?"opacity:.6":""}">
+      <td style="padding:9px 12px">${typBadge}</td>
       <td style="padding:9px 12px"><span class="badge badge-${butik}">${p["Butik"]||"–"}</span></td>
       <td style="padding:9px 12px"><strong>${p["Namn"]||"–"}</strong></td>
       <td style="padding:9px 12px">${p["Varumärke"]||"–"}</td>
       <td style="padding:9px 12px">${p["Kategori"]||"–"}</td>
-      <td style="padding:9px 12px;tex      <td style="padding:9px 12px;text-align:right">${prisNu ? prisNu.toLocaleString("sv-SE")+" kr" : "–"}</td>
+      <td style="padding:9px 12px;text-align:right">${visaPris ? visaPris.toLocaleString("sv-SE")+" kr" : "–"}</td>
       <td style="padding:9px 12px;text-align:right">${forrHtml}</td>
       <td style="padding:9px 12px;text-align:right">${andringKrHtml}</td>
-      <td style="padding:9px 12px;text-align:right">${badgeHtml}</td>
+      <td style="padding:9px 12px;text-align:right">${andringPctHtml}</td>
     </tr>`;
   }).join("");
 }
@@ -877,22 +994,22 @@ function renderKonkurrentdata() {
   const tbody = document.getElementById("kd-body");
 
   const KD_COLS = [
-    {key:"kampanj_start",   label:"Kampanjstart",  w:"100px"},
-    {key:"kampanj_end",     label:"Kampanjslut",   w:"100px"},
-    {key:"vecka",           label:"Vecka",         w:"75px"},
-    {key:"konkurrent",      label:"Konkurrent",    w:"100px"},
-    {key:"kategori",        label:"Kategori",      w:"90px"},
-    {key:"produktgrupp",    label:"Produktgrupp",  w:"130px"},
-    {key:"varumärke",       label:"Märke",         w:"80px"},
-    {key:"sku",             label:"SKU",           w:"140px"},
-    {key:"kampanjpris",     label:"Kampanjpris",   w:"95px",  num:true},
-    {key:"ordinarie_pris",  label:"Ord.pris",      w:"85px",  num:true},
-    {key:"spec",            label:"Spec",          w:"160px"},
-    {key:"var_sku",         label:"Vår SKU",       w:"130px"},
-    {key:"var_kampanjpris", label:"Vårt pris",     w:"85px",  num:true},
-    {key:"prisdiff",        label:"Prisdiff (kr)", w:"90px",  num:true},
-    {key:"kommentar_b2c",   label:"Kommentar",     w:"200px"},
-    {key:"källa",           label:"År",            w:"50px"},
+    {key:"Kampanjstart",        label:"Kampanjstart",  w:"100px"},
+    {key:"Kampanjslut",         label:"Kampanjslut",   w:"100px"},
+    {key:"Vecka",               label:"Vecka",         w:"75px"},
+    {key:"Konkurrent",          label:"Konkurrent",    w:"100px"},
+    {key:"Kategori",            label:"Kategori",      w:"90px"},
+    {key:"Produktgrupp",        label:"Produktgrupp",  w:"130px"},
+    {key:"Varumärke",           label:"Märke",         w:"80px"},
+    {key:"SKU (konkurrent)",    label:"SKU",           w:"140px"},
+    {key:"Kampanjpris (kr)",    label:"Kampanjpris",   w:"95px",  num:true},
+    {key:"Ordinariepris (kr)",  label:"Ord.pris",      w:"85px",  num:true},
+    {key:"Spec (konkurrent)",   label:"Spec",          w:"160px"},
+    {key:"Vår SKU",             label:"Vår SKU",       w:"130px"},
+    {key:"Vårt kampanjpris (kr)", label:"Vårt pris",   w:"85px",  num:true},
+    {key:"Prisdiff (kr)",       label:"Prisdiff (kr)", w:"90px",  num:true},
+    {key:"Kommentar B2C",       label:"Kommentar",     w:"200px"},
+    {key:"Källa",               label:"År",            w:"50px"},
   ];
 
   thead.innerHTML = `<tr style="background:var(--blue-dark);color:#fff">` +
@@ -915,41 +1032,41 @@ function renderKonkurrentdata() {
   const källFil = (document.getElementById("kd-källa")?.value     || "");
 
   const filtered = state.konkurrentdata.filter(r => {
-    if (konkFil && (r["konkurrent"]||"").toLowerCase().indexOf(konkFil)===-1) return false;
-    if (katFil  && r["kategori"] !== katFil) return false;
-    if (källFil && r["källa"]    !== källFil) return false;
+    if (konkFil && (r["Konkurrent"]||"").toLowerCase().indexOf(konkFil)===-1) return false;
+    if (katFil  && r["Kategori"] !== katFil) return false;
+    if (källFil && r["Källa"]    !== källFil) return false;
     if (search) {
-      const hay = [r["sku"],r["varumärke"],r["konkurrent"],r["spec"],r["kommentar_b2c"],r["var_sku"]].join(" ").toLowerCase();
+      const hay = [r["SKU (konkurrent)"],r["Varumärke"],r["Konkurrent"],r["Spec (konkurrent)"],r["Kommentar B2C"],r["Vår SKU"]].join(" ").toLowerCase();
       if (hay.indexOf(search)===-1) return false;
     }
     return true;
   });
 
   tbody.innerHTML = filtered.slice(0,500).map(r => {
-    const priceDiff = parseFloat(r["prisdiff"]) || 0;
+    const priceDiff = parseFloat(r["Prisdiff (kr)"]) || 0;
     const diffStyle = priceDiff < 0 ? "color:var(--green);font-weight:700"
                     : priceDiff > 0 ? "color:var(--red);font-weight:700" : "";
-    const kNm = (r["konkurrent"]||"").toLowerCase();
+    const kNm = (r["Konkurrent"]||"").toLowerCase();
     const kBadgeCls = kNm.includes("elgiganten")?"elgiganten":kNm.includes("power")?"power":"tretti";
-    const harVar = r["var_sku"]&&r["var_sku"].trim();
+    const harVar = r["Vår SKU"]&&r["Vår SKU"].trim();
 
     return `<tr style="${harVar?"background:#f0fdf4":""}">
-      <td style="padding:8px 12px;white-space:nowrap">${r["kampanj_start"]||"–"}</td>
-      <td style="padding:8px 12px;white-space:nowrap">${r["kampanj_end"]||"–"}</td>
-      <td style="padding:8px 12px;font-size:11px;color:#64748b">${r["vecka"]||"–"}</td>
-      <td style="padding:8px 12px"><span class="badge badge-${kBadgeCls}">${r["konkurrent"]||"–"}</span></td>
-      <td style="padding:8px 12px;font-size:12px">${r["kategori"]||"–"}</td>
-      <td style="padding:8px 12px;font-size:12px">${r["produktgrupp"]||"–"}</td>
-      <td style="padding:8px 12px"><strong>${r["varumärke"]||"–"}</strong></td>
-      <td style="padding:8px 12px;font-family:monospace;font-size:12px">${r["sku"]||"–"}</td>
-      <td style="padding:8px 12px;text-align:right;font-weight:700">${r["kampanjpris"]?parseInt(r["kampanjpris"]).toLocaleString("sv-SE")+" kr":"–"}</td>
-      <td style="padding:8px 12px;text-align:right;color:#64748b">${r["ordinarie_pris"]?parseInt(r["ordinarie_pris"]).toLocaleString("sv-SE")+" kr":"–"}</td>
-      <td style="padding:8px 12px;font-size:11px;color:#475569">${r["spec"]||"–"}</td>
-      <td style="padding:8px 12px;font-family:monospace;font-size:12px;color:#166534">${r["var_sku"]||"–"}</td>
-      <td style="padding:8px 12px;text-align:right">${r["var_kampanjpris"]?parseInt(r["var_kampanjpris"]).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;white-space:nowrap">${r["Kampanjstart"]||"–"}</td>
+      <td style="padding:8px 12px;white-space:nowrap">${r["Kampanjslut"]||"–"}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#64748b">${r["Vecka"]||"–"}</td>
+      <td style="padding:8px 12px"><span class="badge badge-${kBadgeCls}">${r["Konkurrent"]||"–"}</span></td>
+      <td style="padding:8px 12px;font-size:12px">${r["Kategori"]||"–"}</td>
+      <td style="padding:8px 12px;font-size:12px">${r["Produktgrupp"]||"–"}</td>
+      <td style="padding:8px 12px"><strong>${r["Varumärke"]||"–"}</strong></td>
+      <td style="padding:8px 12px;font-family:monospace;font-size:12px">${r["SKU (konkurrent)"]||"–"}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:700">${r["Kampanjpris (kr)"]?parseInt(r["Kampanjpris (kr)"]).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;text-align:right;color:#64748b">${r["Ordinariepris (kr)"]?parseInt(r["Ordinariepris (kr)"]).toLocaleString("sv-SE")+" kr":"–"}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#475569">${r["Spec (konkurrent)"]||"–"}</td>
+      <td style="padding:8px 12px;font-family:monospace;font-size:12px;color:#166534">${r["Vår SKU"]||"–"}</td>
+      <td style="padding:8px 12px;text-align:right">${r["Vårt kampanjpris (kr)"]?parseInt(r["Vårt kampanjpris (kr)"]).toLocaleString("sv-SE")+" kr":"–"}</td>
       <td style="padding:8px 12px;text-align:right;${diffStyle}">${priceDiff?(priceDiff>0?"+":"")+parseInt(priceDiff).toLocaleString("sv-SE")+" kr":"–"}</td>
-      <td style="padding:8px 12px;font-size:11px;color:#475569;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r["kommentar_b2c"]||"").replace(/"/g,"'")}">${r["kommentar_b2c"]||"–"}</td>
-      <td style="padding:8px 12px;text-align:center;font-size:11px;color:#94a3b8">${r["källa"]||"–"}</td>
+      <td style="padding:8px 12px;font-size:11px;color:#475569;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r["Kommentar B2C"]||"").replace(/"/g,"'")}">${r["Kommentar B2C"]||"–"}</td>
+      <td style="padding:8px 12px;text-align:center;font-size:11px;color:#94a3b8">${r["Källa"]||"–"}</td>
     </tr>`;
   }).join("") + (filtered.length>500
     ? `<tr><td colspan="${KD_COLS.length}" style="padding:12px;text-align:center;color:#64748b;font-size:13px">Visar 500 av ${filtered.length} rader — filtrera för att se fler</td></tr>`
@@ -989,13 +1106,6 @@ function renderCharts(){
     type:"bar",
     data:{labels:["0–9%","10–19%","20–29%","30–39%","40–49%","50%+"],
       datasets:[{data:buckets,backgroundColor:["#94a3b8","#60a5fa","#3b82f6","#f59e0b","#f97316","#16a34a"],borderRadius:4}]},
-    options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{precision:0}}},responsive:true,maintainAspectRatio:true}
-  });
-}
-</script>
-</body>
-</html>
-"#3b82f6","#f59e0b","#f97316","#16a34a"],borderRadius:4}]},
     options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{precision:0}}},responsive:true,maintainAspectRatio:true}
   });
 }
