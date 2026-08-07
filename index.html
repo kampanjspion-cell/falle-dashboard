@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vitvaror Dashboard 2026-08-06</title>
+<title>Vitvaror Dashboard 2026-08-07</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -193,7 +193,7 @@ th.sortable::after{content:' \2195';color:var(--text-3);font-size:.65rem}
 <div class="prisintelligens">
   <div class="pi-header">
     <span class="pi-title">Prisläge just nu</span>
-    <span class="pi-meta">2026-08-06 17:02</span>
+    <span class="pi-meta">2026-08-07 09:17</span>
   </div>
   <div class="pi-body">
     <div class="pi-stats">
@@ -3265,6 +3265,15 @@ th.sortable::after{content:' \2195';color:var(--text-3);font-size:.65rem}
       <canvas id="chart-cats" height="140"></canvas>
     </div>
   </div>
+  <div id="chart-filtered-list" style="display:none;padding:0 20px 20px">
+    <div style="font-size:.82rem;font-weight:700;color:#555;margin-bottom:8px" id="chart-filtered-title"></div>
+    <div style="max-height:520px;overflow:auto;border:1px solid var(--border);border-radius:8px">
+      <table><thead><tr>
+        <th>Butik</th><th>Produkt</th><th>Varumärke</th><th>Kategori</th>
+        <th class="num">Pris</th><th class="num">Ord. pris</th><th class="num">Rabatt</th>
+      </tr></thead><tbody id="chart-filtered-tbody"></tbody></table>
+    </div>
+  </div>
 </div>
 
 <!-- TAB: Prishistorik -->
@@ -3786,6 +3795,35 @@ function refreshCharts(){
   _ch.discounts.data.datasets[0].data=discBks.map(k=>agg.discounts[k]);
   _ch.discounts._bucketKeys=discBks;
   _ch.discounts.update();
+
+  renderChartFilteredList();
+}
+
+function renderChartFilteredList(){
+  const box=document.getElementById('chart-filtered-list');
+  const tbody=document.getElementById('chart-filtered-tbody');
+  const title=document.getElementById('chart-filtered-title');
+  if(!box||!tbody||!title) return;
+  const f=_chartFilter;
+  if(!f.store&&!f.category&&!f.brand&&!f.disc){ box.style.display='none'; tbody.innerHTML=''; return; }
+  const list=filteredChartProducts();
+  const MAX=300;
+  title.textContent='Produkter i urvalet: '+list.length+(list.length>MAX?' (visar de första '+MAX+')':'');
+  tbody.innerHTML=list.slice(0,MAX).map(p=>{
+    const c=STORE_COLORS[p.store]||'#555';
+    const nameCell=p.u?('<a href="'+escH(p.u)+'" target="_blank" rel="noopener">'+escH(p.n||'(namn saknas)')+'</a>'):escH(p.n||'(namn saknas)');
+    const disc=p.pct!=null?p.pct+'%':'–';
+    return '<tr>'+
+      '<td><span class="sbadge" style="background:'+c+'">'+escH(p.store)+'</span></td>'+
+      '<td>'+nameCell+'</td>'+
+      '<td>'+escH(p.brand)+'</td>'+
+      '<td>'+escH(p.category)+'</td>'+
+      '<td class="num">'+fmtKrJS(p.p)+'</td>'+
+      '<td class="num">'+fmtKrJS(p.op)+'</td>'+
+      '<td class="num">'+disc+'</td>'+
+    '</tr>';
+  }).join('');
+  box.style.display='block';
 }
 
 function renderCharts(){
