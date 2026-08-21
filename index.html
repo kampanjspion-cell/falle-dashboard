@@ -195,7 +195,7 @@ th.sortable::after{content:' \2195';color:var(--text-3);font-size:.65rem}
 <div class="prisintelligens">
   <div class="pi-header">
     <span class="pi-title">Prisläge just nu</span>
-    <span class="pi-meta">2026-08-21 11:23</span>
+    <span class="pi-meta">2026-08-21 11:40</span>
   </div>
   <div class="pi-body">
     <div class="pi-stats">
@@ -11463,7 +11463,7 @@ function showHistory(url, name, ds){
     chartHtml='<p style="color:#888;padding:10px 0;font-size:.83rem">Ingen sparad prishistorik ännu. Historiken byggs upp dag för dag.</p>';
   } else {
     const totalPts=pts.length+kdPts.length;
-    chartHtml='<div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Prisutveckling ('+totalPts+' prispunkter – ● scrapat ■ konkurrentdata)</div>'+svgChartCombined(pts,kdPts);
+    chartHtml='<div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Prisutveckling ('+totalPts+' prispunkter – ● scrapat ■ konkurrentdata)</div>'+svgChartCombined(pts,kdPts,url);
   }
 
   box.innerHTML=specHtml+chartHtml;
@@ -11665,11 +11665,23 @@ function svgChart(pts){
     grid+area+ordLine+line+dots+xlabs+leg+'</svg>'+
     '<div style="font-size:.8rem;color:#888;margin-top:4px">'+n+' datapunkter &middot; senaste kampanjpris <strong>'+fmtN(pts[n-1][1])+' kr</strong></div>';
 }
-function svgChartCombined(scraped, kdPts){
-  var SITE_COLOR={Elgiganten:'#0057a8',Power:'#f4a300',Tretti:'#1f3864',Elon:'#00a550',Hemmy:'#7c3aed',Vitvaruexperten:'#0891b2'};
+function siteFromUrl(u){
+  u=(u||'').toLowerCase();
+  if(u.indexOf('elgiganten.se')>=0) return 'Elgiganten';
+  if(u.indexOf('power.se')>=0) return 'Power';
+  if(u.indexOf('elon.se')>=0) return 'Elon';
+  if(u.indexOf('hemmy.se')>=0) return 'Hemmy';
+  if(u.indexOf('vitvaruexperten')>=0) return 'Vitvaruexperten';
+  if(u.indexOf('whiteaway.se')>=0) return 'Whiteaway';
+  if(u.indexOf('enemo.se')>=0) return 'Enemo';
+  return 'Tretti';
+}
+function svgChartCombined(scraped, kdPts, ownUrl){
+  var SITE_COLOR={Elgiganten:'#0057a8',Power:'#f4a300',Tretti:'#1f3864',Elon:'#00a550',Hemmy:'#7c3aed',Vitvaruexperten:'#0891b2',Whiteaway:'#db2777',Enemo:'#ca8a04'};
   function colorFor(c){return SITE_COLOR[c]||'#888';}
+  var ownSite=siteFromUrl(ownUrl);
   var allPts=[].concat(
-    scraped.map(function(p){return {date:p[0],kp:p[1],op:p[2]!=null?p[2]:null,src:'Tretti',label:'Tretti'};}),
+    scraped.map(function(p){return {date:p[0],kp:p[1],op:p[2]!=null?p[2]:null,src:ownSite,label:ownSite};}),
     kdPts.map(function(p){return {date:p[0],kp:p[1],op:p[2]!=null?p[2]:null,src:p[3],label:p[3]+(p[4]?' ('+p[4]+')':'')};})
   ).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
   if(!allPts.length) return '';
@@ -11694,7 +11706,7 @@ function svgChartCombined(scraped, kdPts){
   });
   // Scraped line (Tretti, blue)
   var scrapedI=[];
-  allPts.forEach(function(p,i){if(p.src==='Tretti')scrapedI.push({p:p,i:i});});
+  allPts.forEach(function(p,i){if(p.src===ownSite)scrapedI.push({p:p,i:i});});
   var scrapedSvg='';
   if(scrapedI.length>1){
     var lpts=scrapedI.map(function(x){return X(x.i).toFixed(1)+','+Y(x.p.kp).toFixed(1);}).join(' ');
@@ -11710,7 +11722,7 @@ function svgChartCombined(scraped, kdPts){
   var dots='';
   allPts.forEach(function(p,i){
     var c=colorFor(p.src);
-    var isKD=(p.src!=='Tretti');
+    var isKD=(p.src!==ownSite);
     var tip=p.date+' ['+p.label+']: '+fmtN(p.kp)+' kr'+(p.op!=null?' (ord. '+fmtN(p.op)+' kr)':'');
     if(isKD){
       var sz=9;
@@ -11733,13 +11745,13 @@ function svgChartCombined(scraped, kdPts){
   allPts.forEach(function(p){
     if(!seen[p.src]){seen[p.src]=1;
       var c=colorFor(p.src);
-      var sym=(p.src==='Tretti')?'&#9644;':'&#9632;';
+      var sym=(p.src===ownSite)?'&#9644;':'&#9632;';
       legItems+='<text x="'+(PL+li*90)+'" y="'+(H-PB+32)+'" font-size="9" fill="'+c+'">'+sym+' '+p.src+'</text>';
       li++;
     }
   });
   return '<svg width="100%" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+grid+scrapedSvg+dots+xlabs+legItems+'</svg>'+
-    '<div style="font-size:.8rem;color:#888;margin-top:4px">'+n+' prispunkter &middot; &#9644; Tretti scrapat &nbsp; &#9632; Konkurrentdata</div>';
+    '<div style="font-size:.8rem;color:#888;margin-top:4px">'+n+' prispunkter &middot; &#9644; '+ownSite+' scrapat &nbsp; &#9632; Konkurrentdata</div>';
 }
 document.querySelectorAll('tr.hrow').forEach(r=>{
   r.addEventListener('click',e=>{
