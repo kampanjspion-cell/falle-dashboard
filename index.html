@@ -331,7 +331,7 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
 <div class="prisintelligens">
   <div class="pi-header">
     <span class="pi-title">Prisläge just nu · Tretti</span>
-    <span class="pi-meta">2026-08-25 13:50</span>
+    <span class="pi-meta">2026-08-25 14:08</span>
   </div>
   <div class="pi-body">
     <div class="pi-stats">
@@ -9035,7 +9035,9 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
       <option>Tretti</option><option>Elgiganten</option><option>Power</option><option>Elon</option><option>Hemmy</option><option>Vitvaruexperten</option><option>Whiteaway</option><option>Enemo</option>
     </select>
     <input type="text" id="trend-brand" placeholder="Filtrera varumärke…" oninput="renderTrendChart()" style="width:160px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.85rem">
-    <span style="font-size:.78rem;color:#888">Snittpris per kategori/dag (30 dagar)</span>
+    <input type="text" id="trend-search" placeholder="🔍 Sök linje… t.ex. tvättmaskiner, power" oninput="renderTrendChart()" style="width:220px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:.85rem">
+    <button type="button" id="trend-reset" class="btn" style="display:none" onclick="resetTrendIsolation()">✕ Visa alla igen</button>
+    <span style="font-size:.78rem;color:#888">Snittpris per kategori/dag (30 dagar) · klicka en linje eller legend för att isolera den</span>
   </div>
   <div class="trend-chart-wrap"><canvas id="trend-chart"></canvas></div>
 </div>
@@ -9197,16 +9199,54 @@ if (sessionStorage.getItem(PW_KEY) === "1") {
 }
 // ─────────────────────────────────────────────────────────────────────────
 let _trendChart=null;
+let _trendIsolated=null; // index i _trendChart.data.datasets som ar isolerad, eller null
+
+function resetTrendIsolation(){
+  _trendIsolated=null;
+  const el=document.getElementById("trend-search"); if(el) el.value="";
+  renderTrendChart();
+}
+
+function _applyTrendIsolation(){
+  if(!_trendChart)return;
+  const ds=_trendChart.data.datasets;
+  ds.forEach((d,i)=>{
+    const meta=_trendChart.getDatasetMeta(i);
+    meta.hidden = _trendIsolated!=null && i!==_trendIsolated;
+  });
+  const resetBtn=document.getElementById("trend-reset");
+  if(resetBtn) resetBtn.style.display = _trendIsolated!=null ? "" : "none";
+  _trendChart.update();
+}
+
+function _toggleTrendIsolate(index){
+  _trendIsolated = (_trendIsolated===index) ? null : index;
+  _applyTrendIsolation();
+}
+
+function _trendWords(s){
+  return (s||"").toLowerCase().split(/[^a-z0-9åäöéèü]+/i).filter(w=>w.length>=3);
+}
+function _trendFuzzyMatch(label,query){
+  const qWords=_trendWords(query);
+  if(!qWords.length)return true;
+  const lWords=_trendWords(label);
+  return qWords.every(qw=>lWords.some(lw=>lw.startsWith(qw)||qw.startsWith(lw)));
+}
+
 function renderTrendChart(){
   const catSel=document.getElementById("trend-cat").value;
   const siteSel=document.getElementById("trend-site").value;
   const brandRaw=(document.getElementById("trend-brand")||{}).value||"";
   const brandSel=brandRaw.trim().toUpperCase();
+  const searchRaw=(document.getElementById("trend-search")||{}).value||"";
+  const search=searchRaw.trim().toLowerCase();
   const td=TREND_DATA;
   const dates=td.dates||[];
   if(!dates.length)return;
   const datasets=[];
   const COLORS={Tretti:"#e63946",Elgiganten:"#0057a8",Power:"#f4a300",Elon:"#00a550",Hemmy:"#7c3aed",Vitvaruexperten:"#0891b2",Whiteaway:"#db2777",Enemo:"#ca8a04"};
+  const DASHES=[[],[6,3],[2,2],[8,3,2,3],[10,4],[4,4,1,4]];
 
   // Decide which series source to use: brand-filtered or category-level
   let sourceData;
@@ -9220,23 +9260,35 @@ function renderTrendChart(){
   sites.forEach(s=>{
     const catData=sourceData[s]||{};
     const availCats=Object.keys(catData);
-    const cats=catSel?[catSel]:availCats.slice(0,6);
-    cats.forEach(c=>{
+    const cats=catSel?[catSel]:(search?availCats:availCats.slice(0,6));
+    cats.forEach((c,ci)=>{
       const vals=catData[c]||[];
       if(!vals.some(v=>v!==null))return; // skip empty series
-      const col=COLORS[s]||"#888";
       const lbl=(sites.length>1?s+" – ":"")+c+(brandSel?" ("+brandRaw.trim()+")":"");
+      if(search && !_trendFuzzyMatch(lbl,search))return; // fritextfilter (kategori/butik/varumarke) - matchar ordstammar, t.ex. "tvattmaskiner" -> "Tvatt & Tork"
+      const col=COLORS[s]||"#888";
       datasets.push({label:lbl,data:vals,
-        borderColor:col,backgroundColor:col+"22",borderWidth:2,tension:0.3,
-        pointRadius:2,pointHoverRadius:5,fill:false,spanGaps:true});
+        borderColor:col,backgroundColor:col+"22",borderWidth:2,borderDash:DASHES[ci%DASHES.length],
+        tension:0.3,pointRadius:1.5,pointHoverRadius:6,pointHitRadius:8,
+        hoverBorderWidth:4,fill:false,spanGaps:true});
     });
   });
 
   const canvas=document.getElementById("trend-chart");
   if(!canvas)return;
   if(_trendChart){_trendChart.destroy();_trendChart=null;}
+  _trendIsolated=null;
+  const resetBtn=document.getElementById("trend-reset");
+  if(resetBtn) resetBtn.style.display="none";
   if(!datasets.length){
-    canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+    const ctx=canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.font="14px Montserrat, sans-serif";
+    ctx.fillStyle="#888";
+    ctx.textAlign="center";
+    ctx.fillText(search?'Inga linjer matchar "'+searchRaw.trim()+'" - prova ett annat sökord':'Ingen data att visa',canvas.width/2,canvas.height/2);
+    ctx.restore();
     return;
   }
   _trendChart=new Chart(canvas,{
@@ -9244,9 +9296,14 @@ function renderTrendChart(){
     data:{labels:dates,datasets:datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
+      interaction:{mode:"nearest",intersect:false},
+      onClick:(evt,elements,chart)=>{
+        const pts=chart.getElementsAtEventForMode(evt,"nearest",{intersect:true},true);
+        if(pts.length) _toggleTrendIsolate(pts[0].datasetIndex);
+      },
       plugins:{
-        legend:{display:true,position:"bottom",labels:{boxWidth:14,font:{size:11}}},
+        legend:{display:true,position:"bottom",labels:{boxWidth:14,font:{size:11}},
+          onClick:(e,legendItem)=>_toggleTrendIsolate(legendItem.datasetIndex)},
         tooltip:{callbacks:{label:ctx=>ctx.dataset.label+": "+(ctx.parsed.y!=null?ctx.parsed.y.toLocaleString("sv-SE")+" kr":"–")}}
       },
       scales:{
