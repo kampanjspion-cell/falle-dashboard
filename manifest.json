@@ -1,0 +1,15 @@
+{
+  "name": "Vitvaror Dashboard",
+  "short_name": "Kampanjspion",
+  "description": "Kampanjövervakning, prisanalys och konkurrentbevakning för vitvaror",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f8f6",
+  "theme_color": "#002800",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
