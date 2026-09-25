@@ -354,7 +354,7 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
 <div class="prisintelligens">
   <div class="pi-header">
     <span class="pi-title">Prisläge just nu · Tretti</span>
-    <span class="pi-meta">2026-09-25 12:40</span>
+    <span class="pi-meta">2026-09-25 12:48</span>
   </div>
   <div class="pi-body">
     <div class="pi-stats">
@@ -3922,12 +3922,19 @@ async function ensurePdbLoaded(){
     filterPdb();
   }
 }
-document.addEventListener('DOMContentLoaded', loadExternalData);
 </script>
 <script>
 // ─── AUTH ─────────────────────────────────────────────────────────────────
+// Datan hämtas inte förrän efter godkänt lösenord (eller en redan sparad
+// inloggning) — tidigare laddades all konkurrentprisdata oavsett lösenord.
 const PW_HASH = "748afecc748afecc";
 const PW_KEY  = "vv_auth";
+let _dataStarted = false;
+function startApp() {
+  if (_dataStarted) return;
+  _dataStarted = true;
+  loadExternalData();
+}
 function simpleHash(s) {
   let h = 0x12345678;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x9e3779b9) >>> 0;
@@ -3936,9 +3943,10 @@ function simpleHash(s) {
 function checkPw() {
   const pw = document.getElementById("pw-input").value;
   if (simpleHash(pw) === PW_HASH) {
-    sessionStorage.setItem(PW_KEY, "1");
+    localStorage.setItem(PW_KEY, "1");
     document.getElementById("login-gate").classList.add("fade-out");
     setTimeout(() => { document.getElementById("login-gate").remove(); }, 400);
+    startApp();
   } else {
     const el = document.getElementById("login-error");
     el.textContent = "Fel lösenord — försök igen.";
@@ -3946,9 +3954,10 @@ function checkPw() {
     setTimeout(() => { el.textContent = ""; }, 2500);
   }
 }
-if (sessionStorage.getItem(PW_KEY) === "1") {
+if (localStorage.getItem(PW_KEY) === "1") {
   const g = document.getElementById("login-gate");
   if (g) g.remove();
+  startApp();
 }
 // ─────────────────────────────────────────────────────────────────────────
 let _trendChart=null;
