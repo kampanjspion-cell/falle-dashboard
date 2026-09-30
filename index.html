@@ -354,7 +354,7 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
 <div class="prisintelligens">
   <div class="pi-header">
     <span class="pi-title">Prisläge just nu · Tretti</span>
-    <span class="pi-meta">2026-09-30 13:48</span>
+    <span class="pi-meta">2026-09-30 14:04</span>
   </div>
   <div class="pi-body">
     <div class="pi-stats">
@@ -5718,12 +5718,12 @@ function runExportAll(){
   if(!chosen.size){ alert('Valj minst en kategori.'); return; }
   const rows=_exportAllVisibleRows().filter(r=>chosen.has(r.dataset.cat));
   if(!rows.length){ alert('Inga produkter matchar de valda kategorierna.'); return; }
-  const headers=['Butik','Produkt','Kategori','Tillverkare','SKU','Modell','Lager','Energiklass','Volym (L)','Färg','Kampanjpris','Ord. pris','Besparing','Start','Slut','Kampanjtyp'];
+  const headers=['Store','Product','Category','Manufacturer','SKU','Model','Stock status','Energy class','Volume (L)','Color','Campaign price','Original price','Savings','Start','End','Campaign type','Link'];
   const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
   let csv=headers.map(q).join(';')+'\n';
   rows.forEach(r=>{
     const d=r.dataset;
-    csv+=[d.site,d.pname,d.cat,d.brand,d.sku,d.model,d.lager,d.energi,d.volym,d.farg,d.kampris,d.origris,d.besparing,d.kampstart,d.kampslut,d.badge]
+    csv+=[d.site,d.pname,d.cat,d.brand,d.sku,d.model,d.lager,d.energi,d.volym,d.farg,d.kampris,d.origris,d.besparing,d.kampstart,d.kampslut,d.badge,d.url]
       .map(q).join(';')+'\n';
   });
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
