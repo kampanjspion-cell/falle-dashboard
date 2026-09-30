@@ -354,7 +354,7 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
 <div class="prisintelligens">
   <div class="pi-header">
     <span class="pi-title">Prisläge just nu · Tretti</span>
-    <span class="pi-meta">2026-09-30 08:42</span>
+    <span class="pi-meta">2026-09-30 13:48</span>
   </div>
   <div class="pi-body">
     <div class="pi-stats">
@@ -416,6 +416,7 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
     </select>
     <input type="text" id="all-brand" placeholder="Varumärke…" oninput="filterAll()" style="width:130px">
     <span style="font-size:.8rem;color:#888" id="all-count"></span>
+    <button type="button" onclick="openExportAllModal()" style="margin-left:auto">Exportera till Excel</button>
   </div>
   <table id="tbl-all">
     <thead><tr><th class="sortable">Butik</th><th class="sortable">Produkt</th><th class="sortable">Kategori</th><th class="sortable">Tillverkare</th><th class="sortable">SKU</th><th class="sortable">Modell</th><th class="sortable">Lager</th><th class="sortable">Energiklass</th><th class="sortable num">Volym (L)</th><th class="sortable">Färg</th><th class="sortable num">Kampanjpris</th><th class="sortable num">Ord. pris</th><th class="sortable num">Besparing</th><th class="sortable">Start</th><th class="sortable">Slut</th><th class="sortable">Kampanjtyp</th></tr></thead>
@@ -5288,7 +5289,7 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
 <!-- TAB: Konkurrensmönster -->
 <div id="tab-pattern" class="tab-content panel">
   <div style="padding:10px 16px;font-size:.83rem;color:#555">Prisförändringar per kategori de senaste 14 dagarna. <span style="color:#16a34a;font-weight:700">■ Prissänkning</span> &nbsp; <span style="color:#cf222e;font-weight:700">■ Prishöjning</span></div>
-  <table><thead><tr><th>Butik</th><th>Kategori</th><th class='num'>Ändringar</th><th class='num'>Sänkningar</th><th class='num'>Höjningar</th><th class='num'>Produkter</th><th style='min-width:120px'>Riktning</th></tr></thead><tbody><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Matlagning</td><td class='num'><strong>75</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 74</td><td class='num grey'>75</td><td><div class='pbar'><span class='pb-down' style='width:1%'></span><span class='pb-up'   style='width:99%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Grill</td><td class='num'><strong>26</strong></td><td class='num grn'>↓ 10</td><td class='num red'>↑ 16</td><td class='num grey'>15</td><td><div class='pbar'><span class='pb-down' style='width:38%'></span><span class='pb-up'   style='width:62%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Koksflakt</td><td class='num'><strong>22</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 21</td><td class='num grey'>22</td><td><div class='pbar'><span class='pb-down' style='width:5%'></span><span class='pb-up'   style='width:95%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#7c3aed'>Hemmy</span></td><td>Paket</td><td class='num'><strong>22</strong></td><td class='num grn'>↓ 22</td><td class='num red'>↑ 0</td><td class='num grey'>22</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Dammsugare &amp; Kladvard</td><td class='num'><strong>5</strong></td><td class='num grn'>↓ 5</td><td class='num red'>↑ 0</td><td class='num grey'>5</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Munhygien Tandhygien</td><td class='num'><strong>4</strong></td><td class='num grn'>↓ 4</td><td class='num red'>↑ 0</td><td class='num grey'>4</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#7c3aed'>Hemmy</span></td><td>Häll Med Fläkt</td><td class='num'><strong>2</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 0</td><td class='num grey'>2</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#7c3aed'>Hemmy</span></td><td>Tvatt &amp; Tork</td><td class='num'><strong>2</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 0</td><td class='num grey'>2</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0891b2'>Vitvaruexperten</span></td><td>Tvatt &amp; Tork</td><td class='num'><strong>2</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 0</td><td class='num grey'>2</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#00a550'>Elon</span></td><td>Mjölkskummare</td><td class='num'><strong>1</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 0</td><td class='num grey'>1</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#f4a300'>Power</span></td><td>Halsa Och Valmaaende</td><td class='num'><strong>1</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 0</td><td class='num grey'>1</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#f4a300'>Power</span></td><td>Personvard</td><td class='num'><strong>1</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 0</td><td class='num grey'>1</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr></tbody></table>
+  <table><thead><tr><th>Butik</th><th>Kategori</th><th class='num'>Ändringar</th><th class='num'>Sänkningar</th><th class='num'>Höjningar</th><th class='num'>Produkter</th><th style='min-width:120px'>Riktning</th></tr></thead><tbody><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Matlagning</td><td class='num'><strong>75</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 74</td><td class='num grey'>75</td><td><div class='pbar'><span class='pb-down' style='width:1%'></span><span class='pb-up'   style='width:99%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Kyl &amp; Frys</td><td class='num'><strong>56</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 54</td><td class='num grey'>56</td><td><div class='pbar'><span class='pb-down' style='width:4%'></span><span class='pb-up'   style='width:96%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Diskmaskin</td><td class='num'><strong>28</strong></td><td class='num grn'>↓ 3</td><td class='num red'>↑ 25</td><td class='num grey'>28</td><td><div class='pbar'><span class='pb-down' style='width:11%'></span><span class='pb-up'   style='width:89%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Grill</td><td class='num'><strong>26</strong></td><td class='num grn'>↓ 10</td><td class='num red'>↑ 16</td><td class='num grey'>15</td><td><div class='pbar'><span class='pb-down' style='width:38%'></span><span class='pb-up'   style='width:62%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Koksflakt</td><td class='num'><strong>22</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 21</td><td class='num grey'>22</td><td><div class='pbar'><span class='pb-down' style='width:5%'></span><span class='pb-up'   style='width:95%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#7c3aed'>Hemmy</span></td><td>Paket</td><td class='num'><strong>22</strong></td><td class='num grn'>↓ 22</td><td class='num red'>↑ 0</td><td class='num grey'>22</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Tvatt &amp; Tork</td><td class='num'><strong>19</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 18</td><td class='num grey'>19</td><td><div class='pbar'><span class='pb-down' style='width:5%'></span><span class='pb-up'   style='width:95%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Dammsugare &amp; Kladvard</td><td class='num'><strong>5</strong></td><td class='num grn'>↓ 5</td><td class='num red'>↑ 0</td><td class='num grey'>5</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0057a8'>Elgiganten</span></td><td>Munhygien Tandhygien</td><td class='num'><strong>4</strong></td><td class='num grn'>↓ 4</td><td class='num red'>↑ 0</td><td class='num grey'>4</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#7c3aed'>Hemmy</span></td><td>Häll Med Fläkt</td><td class='num'><strong>2</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 0</td><td class='num grey'>2</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#7c3aed'>Hemmy</span></td><td>Tvatt &amp; Tork</td><td class='num'><strong>2</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 0</td><td class='num grey'>2</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#0891b2'>Vitvaruexperten</span></td><td>Tvatt &amp; Tork</td><td class='num'><strong>2</strong></td><td class='num grn'>↓ 2</td><td class='num red'>↑ 0</td><td class='num grey'>2</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#00a550'>Elon</span></td><td>Mjölkskummare</td><td class='num'><strong>1</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 0</td><td class='num grey'>1</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#f4a300'>Power</span></td><td>Halsa Och Valmaaende</td><td class='num'><strong>1</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 0</td><td class='num grey'>1</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr><tr><td><span class='sbadge' style='background:#f4a300'>Power</span></td><td>Personvard</td><td class='num'><strong>1</strong></td><td class='num grn'>↓ 1</td><td class='num red'>↑ 0</td><td class='num grey'>1</td><td><div class='pbar'><span class='pb-down' style='width:100%'></span><span class='pb-up'   style='width:0%'></span></div></td></tr></tbody></table>
 </div>
 
     </div>
@@ -5310,6 +5311,28 @@ nav.sb-nav{padding:12px 10px;overflow-y:auto;flex:1}
     <div class="modaltitle" id="pdbtitle">Produktdetaljer</div>
     <button type="button" class="modalclose" aria-label="Stäng" onclick="document.getElementById('pdbmodal').style.display='none'">&#x2715;</button>
     <div id="pdbbody"></div>
+  </div>
+</div>
+
+<!-- Modal: valj kategorier och exportera Kampanjprodukter-fliken till Excel/CSV -->
+<div id="exportallmodal" class="modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modalbox">
+    <div class="modaltitle">Exportera till Excel</div>
+    <button type="button" class="modalclose" aria-label="Stäng" onclick="document.getElementById('exportallmodal').style.display='none'">&#x2715;</button>
+    <div style="font-size:.8rem;color:#888;margin-bottom:10px">
+      Utgar fran de <b id="exportall-basecount">0</b> produkter som just nu visas i tabellen (dina filter ovan galler).
+      Valj vilken/vilka kategorier som ska vara med i exporten.
+    </div>
+    <div style="margin-bottom:8px">
+      <a href="#" onclick="setAllExportCats(true);return false;">Markera alla</a>
+      &nbsp;·&nbsp;
+      <a href="#" onclick="setAllExportCats(false);return false;">Avmarkera alla</a>
+    </div>
+    <div id="exportall-cats" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px 12px"></div>
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" onclick="document.getElementById('exportallmodal').style.display='none'">Avbryt</button>
+      <button type="button" onclick="runExportAll()">Exportera valda kategorier</button>
+    </div>
   </div>
 </div>
 
@@ -5668,6 +5691,47 @@ function filterGap(){
 function updateAllCount(){
   const vis=[...document.querySelectorAll('#tbl-all tbody tr')].filter(r=>r.style.display!=='none').length;
   const el=document.getElementById('all-count'); if(el) el.textContent=vis+' produkter';
+}
+// ── Export av Kampanjprodukter-fliken (tbl-all) till Excel/CSV, med val av kategori(er) ──
+function _exportAllVisibleRows(){
+  return [...document.querySelectorAll('#tbl-all tbody tr')].filter(r=>r.style.display!=='none');
+}
+function openExportAllModal(){
+  const rows=_exportAllVisibleRows();
+  document.getElementById('exportall-basecount').textContent=rows.length;
+  const cats=[...new Set(rows.map(r=>r.dataset.cat).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'sv'));
+  const box=document.getElementById('exportall-cats');
+  if(!cats.length){
+    box.innerHTML='<span style="color:#888">Inga kategorier i den aktuella filtreringen.</span>';
+  } else {
+    box.innerHTML=cats.map(c=>
+      '<label style="display:block;padding:3px 0"><input type="checkbox" class="exportall-cat" value="'+escH(c)+'" checked> '+escH(c)+'</label>'
+    ).join('');
+  }
+  document.getElementById('exportallmodal').style.display='flex';
+}
+function setAllExportCats(checked){
+  document.querySelectorAll('.exportall-cat').forEach(cb=>cb.checked=checked);
+}
+function runExportAll(){
+  const chosen=new Set([...document.querySelectorAll('.exportall-cat:checked')].map(cb=>cb.value));
+  if(!chosen.size){ alert('Valj minst en kategori.'); return; }
+  const rows=_exportAllVisibleRows().filter(r=>chosen.has(r.dataset.cat));
+  if(!rows.length){ alert('Inga produkter matchar de valda kategorierna.'); return; }
+  const headers=['Butik','Produkt','Kategori','Tillverkare','SKU','Modell','Lager','Energiklass','Volym (L)','Färg','Kampanjpris','Ord. pris','Besparing','Start','Slut','Kampanjtyp'];
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  let csv=headers.map(q).join(';')+'\n';
+  rows.forEach(r=>{
+    const d=r.dataset;
+    csv+=[d.site,d.pname,d.cat,d.brand,d.sku,d.model,d.lager,d.energi,d.volym,d.farg,d.kampris,d.origris,d.besparing,d.kampstart,d.kampslut,d.badge]
+      .map(q).join(';')+'\n';
+  });
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='kampanjprodukter_export.csv';
+  a.click();
+  document.getElementById('exportallmodal').style.display='none';
 }
 // ── Produktdatabas-fliken (permanent produkt-DB, se product_db.py) ─────────
 function pdbMatt(p){ return (p.bredd_cm&&p.hojd_cm&&p.djup_cm) ? (p.bredd_cm+'×'+p.hojd_cm+'×'+p.djup_cm+' cm') : (p.bredd_cm||p.hojd_cm||p.djup_cm||''); }
